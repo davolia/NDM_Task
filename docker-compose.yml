@@ -14,7 +14,6 @@ services:
       proxy_net:
         ipv4_address: 172.20.0.20
 
-  # nginx3 — last hop before app
   nginx3:
     image: nginx:alpine
     container_name: nginx3
@@ -28,7 +27,6 @@ services:
       proxy_net:
         ipv4_address: 172.20.0.13
 
-  # nginx2 — middle hop, proxies to nginx3
   nginx2:
     image: nginx:alpine
     container_name: nginx2
@@ -42,7 +40,6 @@ services:
       proxy_net:
         ipv4_address: 172.20.0.12
 
-  # nginx1 — entry point, proxies to nginx2
   nginx1:
     image: nginx:alpine
     container_name: nginx1
