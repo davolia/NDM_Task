@@ -1,0 +1,57 @@
+networks:
+  proxy_net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/24
+          gateway: 172.20.0.1
+
+services:
+  app:
+    image: traefik/whoami
+    container_name: app
+    networks:
+      proxy_net:
+        ipv4_address: 172.20.0.20
+
+  # nginx3 — last hop before app
+  nginx3:
+    image: nginx:alpine
+    container_name: nginx3
+    volumes:
+      - ./nginx3/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./shared/geo_trusted.conf:/etc/nginx/geo_trusted.conf:ro
+    depends_on: [app]
+    ports:
+      - "8083:80"
+    networks:
+      proxy_net:
+        ipv4_address: 172.20.0.13
+
+  # nginx2 — middle hop, proxies to nginx3
+  nginx2:
+    image: nginx:alpine
+    container_name: nginx2
+    volumes:
+      - ./nginx2/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./shared/geo_trusted.conf:/etc/nginx/geo_trusted.conf:ro
+    depends_on: [nginx3]
+    ports:
+      - "8082:80"
+    networks:
+      proxy_net:
+        ipv4_address: 172.20.0.12
+
+  # nginx1 — entry point, proxies to nginx2
+  nginx1:
+    image: nginx:alpine
+    container_name: nginx1
+    volumes:
+      - ./nginx1/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./shared/geo_trusted.conf:/etc/nginx/geo_trusted.conf:ro
+    depends_on: [nginx2]
+    ports:
+      - "8081:80"
+    networks:
+      proxy_net:
+        ipv4_address: 172.20.0.11
